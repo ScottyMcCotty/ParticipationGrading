@@ -32,6 +32,7 @@ Okay now's the part where I'm not sure the best approach
     * I like the potential for this option, more than the graph
 
 Things to look further into:
-* Can we see the student groups from the API, ( something like course.get_groups( ) lol)
+* Can we see the student groups from the API (the actual command is course.get_groups( ), so that's worth checking out)
 * If we can get a list of the student groups, then we might have an easier time matching people together in interactions, since we expect people to only interact with others in their group!
+* group.get_users( ) allegedly returns a Paginated list of Users, so I'm interested to see whether the user id's of these people matches the user id's of people who submitted the participation quiz. It should, right?
 
