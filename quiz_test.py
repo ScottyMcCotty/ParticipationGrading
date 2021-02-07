@@ -29,35 +29,100 @@ import pprint
 
 
 class Student:
-
+    # a student HAS a name
+    # a student HAS some identification
+    # maybe a student has interactions?
+    
     # this is the initializer for classes
     # all class methods have the first argument as "self"
     # it's sort of like the "this" word in C++, except not a pointer
-    def __init__(self, ID, NAME):
-        # empty dictionary of student interactions
-        # each student that "self" interacts with will be put in the dictionary
-        # student_id : time_interacted
-        self.interactions = {}
-        self.id = ID
-        self.name = NAME
+    def __init__(self, canvas_user_object):
+        # Student constructor which takes a canvas user object
+        # and extracts the information into whatever fields it want
+        
+        # I'm not sure which fields will be useful or not, but we can
+        # extract more / less informatio later if we choose.
+        self.name = canvas_user_object.name
+        self.ID = canvas_user_object.id
+        self.SIS = canvas_user_object.sis_user_id
+    
+    # returns the student's name
+    def getName(self):
+        return self.name
+    
+    # returns the student's id
+    def getID(self):
+        return self.ID
+    
+    # returns the student's sis user id
+    def getSIS(sefl):
+        return self.SIS
+        
 
-    # for adding an interaction with a single other student
-    def addInteraction(self, ID, TIME):
-        if ID in self.interactions:
-            self.interactions[ID] += TIME
-        else:
-            self.interactions[ID] = TIME
+class Group:
+    # a group HAS students
+    # a group HAS interactions between students
+    # a group HAS a name
+    # a gropu HAS identification
+    
+    # initialize Group by passing in canvas group object
+    def __init__(self, canvas_group_object):
+        self.name = canvas_group_object.name
+        self.ID = canvas_group_object.id
+        
+        self.students = self.getStudentsInGroup(canvas_group_object)
+        self.interactins = None # for now
+    
+    def getStudentsInGroup(self, canvas_group_object):
+        users = canvas_group_object.get_users()
+        
+        for user in users:
+            student = Student(user)
+            self.students.append(student)
+            print("Got student '", student.getName(), "' from group '", self.getName(), "'", sep='')
+    
+    
+    # get the group's name
+    def getName(self):
+        return self.name
+        
+    # get the group's ID
+    def getID(self):
+        return self.ID
+    
+    # get the group's students
+    def getStudents(self):
+        return students
+    
+    def getInteractions(self):
+        print("This isn't ready yet")
+        return None
 
-    # for adding an interaction with 2+ students (like in a group)
-    def addInteractions(self, IDs, TIMEs):
-        if len(IDs) != len(TIMEs):
-            print("Problem in the addInteractions method!\nExiting without changing interaction times")
-        for ii in range(len(IDs)):
-            if IDs[ii] in self.interactions:
-                self.interactions[IDs[ii]] += TIMEs[ii]
-            else:
-                self.interactions[IDs[ii]] = TIMEs[ii]
 
+class Interaction:
+    # an interaction HAS students involved
+    # an interaction HAS a duration
+    
+    # initialize interaction without any arguments?
+    def __init__(self):
+        self.students = None
+        self.duration = None
+    
+    def addStudent(self, student):
+        # maybe do input validation here, check whether student is duplicate, etc
+        self.students.append(student)
+        
+    def setDuration(self, duration):
+        # check how the duration compares with other reported durations for this interaction?
+        self.duration = duration
+    
+    def getDuration(self):
+        return self.duration
+    
+    def getStudents(self):
+        return self.students
+
+    
 
 
 def getAPIURL():
