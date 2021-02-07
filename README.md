@@ -33,6 +33,14 @@ Okay now's the part where I'm not sure the best approach
 
 Things to look further into:
 * Can we see the student groups from the API (the actual command is course.get_groups( ), so that's worth checking out)
-* If we can get a list of the student groups, then we might have an easier time matching people together in interactions, since we expect people to only interact with others in their group!
-* group.get_users( ) allegedly returns a Paginated list of Users, so I'm interested to see whether the user id's of these people matches the user id's of people who submitted the participation quiz. It should, right?
-
+    * Update: get_groups() works, and from each group you can get the students who are in the group
+    * Currently the Group class deals with making the Student objects, although we'll need some way to check whether there are any students who *didn't* get put in groups somehow
+* The Interaction class should be for keeping track of student interactions.
+* When we're reading student quiz answers, the process might go something like this:
+    * You (Zanthrop) say you interacted with Adam, Bob, and Carson for a certain duration
+    * We check whether there's already an existing interaction between Zanthrop, Adam, Bob, and Carson
+    * If there is, we make sure the durations are similar enough
+        * What happens next?
+    * If there's not, then we create the new Interaction instance
+        * What happens next?
+* Once all the users quizzes have been read in, we can go through each group and tally up the total interaction time each student has, and assign grades from there
