@@ -41,10 +41,14 @@ class Student:
         # and extracts the information into whatever fields it want
         
         # I'm not sure which fields will be useful or not, but we can
-        # extract more / less informatio later if we choose.
+        # extract more / less information later if we choose.
         self.name = canvas_user_object.name
         self.ID = canvas_user_object.id
         self.SIS = canvas_user_object.sis_user_id
+    
+    # set the group that the student is in
+    def setStudentGroup(self, group_id):
+        self.group = group_id
     
     # returns the student's name
     def getName(self):
@@ -55,7 +59,7 @@ class Student:
         return self.ID
     
     # returns the student's sis user id
-    def getSIS(sefl):
+    def getSIS(self):
         return self.SIS
         
 
@@ -63,7 +67,7 @@ class Group:
     # a group HAS students
     # a group HAS interactions between students
     # a group HAS a name
-    # a gropu HAS identification
+    # a group HAS identification
     
     # initialize Group by passing in canvas group object
     def __init__(self, canvas_group_object):
@@ -71,17 +75,28 @@ class Group:
         self.ID = canvas_group_object.id
         
         self.students = self.getStudentsInGroup(canvas_group_object)
-        self.interactins = None # for now
-    
+        self.interactions = None # for now
+
+    # get a list of Students in the group and save to self.students
     def getStudentsInGroup(self, canvas_group_object):
         users = canvas_group_object.get_users()
-        
+        students = []
         for user in users:
             student = Student(user)
-            self.students.append(student)
-            print("Got student '", student.getName(), "' from group '", self.getName(), "'", sep='')
+            student.setStudentGroup(self.ID)
+            students.append(student)
+            # print("Got student '", student.getName(), "' from group '", self.getName(), "'", sep='')
+        return students
     
-    
+    # check that name, ID, and SIS match; student is in group
+    # used to make sure the interactions are with people in the specific group
+    # student should be a Student object
+    def checkStudentInGroup(self, canvas_group_object, student):
+        if student in canvas_group_object.getStudents:
+            return True
+        else:
+            return False
+
     # get the group's name
     def getName(self):
         return self.name
@@ -92,7 +107,7 @@ class Group:
     
     # get the group's students
     def getStudents(self):
-        return students
+        return self.students
     
     def getInteractions(self):
         print("This isn't ready yet")
@@ -352,24 +367,24 @@ def getGroups(course):
         groups = course.get_groups()
     except:
         print("You tried to get the groups for a course but it failed terribly")
-    else:
+        print("Returning nothing, I guess")
+        return None
+    
+    # for group in groups:
+    #     print("\n\nPrinting group '",group.name,"'",sep='')
+    #     print(group.__dict__)
+    #     print("------------------\nMembers:")
         
-        for group in groups:
-            print("\n\nPrinting group '",group.name,"'",sep='')
-            print(group.__dict__)
-            print("------------------\nMembers:")
-            
-            users = group.get_users()
-            
-            print("------------------")
-            for user in users:
-                print("Printing users '",user.name,"'",sep='')
-                print(user.__dict__)
-                print("------------------")
+    #     users = group.get_users()
         
-        return groups
-    print("Returning nothing, I guess")
-    return None
+    #     print("------------------")
+    #     for user in users:
+    #         print("Printing users '",user.name,"'",sep='')
+    #         print(user.__dict__)
+    #         print("------------------")
+    
+    return groups
+    
     
 
 ##############################
@@ -400,12 +415,86 @@ if __name__ == "__main__":
     print("Got course: '",course,"'",sep='')
     
     # get the groups of a particular course
-    groups = getGroups(course);
-    exit()
+    groups = getGroups(course)
+
+    # convert each group to a Group object
+    # then put them into a master group_list
+    group_list = []
+    for group in groups:
+        g = Group(group)
+        group_list.append(g)
+
+    # create a dictionary mapping each group_id to their students
+    # remember that each student has an attribute identifying their group as well
+    group_dict = {}
+    for g in group_list:
+        group_dict[g.getID()] = g.getStudents()
+        
+        # print(g.getName())
+        # print(g.getID())
+        # print(g.getStudents())
+
+    # print(group_dict)
+    # exit()
     
-    # get user input the for the quiz
+    # get the user input for the quiz
     quiz = getQuiz(course)
     print("Got quiz: '",quiz,"'",sep='')
+
+    # print all submissions for a particular quiz
+    submissions = quiz.get_submissions()
+    all_interactions = []
+    print("Got submissions: ")
+    for submission in submissions:
+        print(submission)
+        print(submission.id)
+        print(submission.user_id)
+        # all_interactions = recordSubmission(submission, all_interactions)
+
+    # what the recordSubmission(submission, all_interactions) call should do:
+        # look at all user submissions
+        # parse question answers
+        # for each question:
+            # ignore if answer to the first drop-down is 'None'
+            # otherwise, create an Interaction object which notes:
+                # activity type
+                # duration (set to 0 if no duration was selected)
+                # list of students involved, including the user who submitted (set to empty list if no selection)
+                # Interaction ID, composed of user_id + submission_id + i (i=1,2,3,4)
+            # append each valid Interaction to all_interactions
+        # return all_interactions
+
+
+    # Now look at submissions by Group
+
+    # gradeSubmission(submission, all_interactions)
+
+    # what the gradeSubmission(submission) call should do:
+        # get the user the submission belongs to
+        # parse question answers
+        # for each question:
+            # ignore if answer to the first drop-down is 'None'
+            # otherwise, create an Interaction object the same way as before
+            # check against existing list of Interactions for all four attributes
+                # activity type (give this a lower weight if everything else matches?)
+                # duration
+                    # allow for +/- 5min buffer in duration
+                # list of students involved, including the user who submitted (set to empty list if no selection)
+                    # check to make sure all students selected are in the specified Group
+                # Interaction ID, composed of user_id + submission_id + i (i=1,2,3,4)
+                    # Do not count valid Interaction if the ID is the same
+               
+            # if Interaction exists, tally up time
+
+        # calculate grade from time / 20
+        # return grade
+
+    # Interaction object
+    # Attributes:
+        # students involved
+        # duration
+        # activity
+
 
     # get user input for the assignment
     #assignment = getAssignment(course)
@@ -414,7 +503,7 @@ if __name__ == "__main__":
     #getQuizSubmissions(quiz)
     #getSubmissions(quiz)
     
-
+    """
     #quiz = canvasClass.get_quiz(QUIZ_ID)
     studentReport = quiz.create_report("student_analysis")
     print(studentReport.__dict__)
@@ -432,11 +521,5 @@ if __name__ == "__main__":
     print(studentData.iat[0,8])
     print("Just out of curiousity, what's studentData[8]?")
     print(studentData.iat[1,9])
-
-
     
-
-    
-    
-    
-    
+    """
