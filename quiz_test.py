@@ -144,12 +144,6 @@ if __name__ == "__main__":
 
     #getQuizSubmissions(quiz)
     #getSubmissions(quiz)
-    
-    #quiz = canvasClass.get_quiz(QUIZ_ID)
-    studentReport = quiz.create_report("student_analysis")
-    # print(studentReport.__dict__)
-    url = studentReport.file["url"]
-    studentData = pd.read_csv(url)
 
     # Get the right quiz
     studentReport = quiz.create_report("student_analysis")
@@ -174,4 +168,38 @@ if __name__ == "__main__":
     url = studentReportN.file["url"]
     studentData = pd.read_csv(url)
 
+    """ To help get question IDs:
+    for key in studentData.keys():
+        print("-------------------------")
+        print("Key:",key, sep='\n')
+        print("-----------")
+        print("Value:",studentData[key],sep='\n')
+    """
+
     parse(studentData, course.id)
+    # Bonnie interacts with Scott
+    # Scott interacts with Bonnie and Matthew
+    # Matthew interacts with Bonnie and Scott
+
+    # grade interactions by the difference in number of people, length of duration, type of activities
+    # multiply by constant penalties chosen by us
+
+    # Questions:
+    # How to import list of student names into quiz? Automatically generate quiz?
+    # How should we be checking groups?
+        # Right now I'm looking at all submissions. From each submission, I can get the submitting user ID and their answers,
+        # but their answers will be the *names* of their group members -- I can't match them to ID
+        # I also have access to a dictionary mapping each group_id to a list of Student objects
+            # Student objects have name, id, and group ID
+        # Compile submissions by Group?
+            # get the user_ids of each Student in each Group
+            # using the user ids, search through the master submission list, since you can check by user_id
+            # get the list of Interactions for each student in the group
+            # check them against each other somehow? this is the part I'm having trouble with
+                # For each participant in each Interaction, check that they have a matching interaction
+                # For each Interaction, add a 'validated' attribute?
+            # tally up valid durations
+            # add a grade attribute to each Student in the Group?
+    # Separately: should there be Interaction IDs? Composed of user_id + quiz_id + question_id?
+        # Used to make sure students don't match their own interactions? Or will that not be a problem?
+        # Maybe it's only a problem if I compile a master list of Interactions and check for identical ones?

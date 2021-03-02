@@ -2,11 +2,46 @@ from canvasapi import Canvas
 import pprint
 import math
 import pandas as pd
-# from studentClass import Student
+# from StudentClass import Student
+from InteractionClass import Interaction
+
+# create a list of Interactions for each student
+# TO DO: need a way to get students by ID instead of name
+#        and add them as a Student object instead of just a string
+def createInteractions(inter_arr, user_name):
+    inter_list = []
+    for interaction in inter_arr:
+        # check for full bad submission, nan
+        # what about the case where only some questions have no answers?
+        if interaction != interaction:
+            continue
+
+        # set activity and check if None
+        activity = interaction[0]
+        if activity == 'None':
+            continue
+
+        # strip 'min' from the end of the string, convert to int
+        # '45+ min' will be a problem
+        duration = int(interaction[1][:-3])
+
+        # set of people in interaction
+        participants = set(interaction[2:])
+        if 'None' in participants:
+            partipants.remove('None')
+        participants.add(user_name) # add the user who submitted to the interaction
+
+        new_inter = Interaction(activity, duration, participants)
+        inter_list.append(new_inter)
+
+    return inter_list
+
 
 def parse(studentData:pd, CLASS_ID: int):
-    #Fill the dictionary and the student lists
+    # Fill the dictionary and the student lists
     dictSt = {}
+
+    # these are the question IDs
     activity1 = '1150802'
     activity2 = '1150814'
     
@@ -14,32 +49,20 @@ def parse(studentData:pd, CLASS_ID: int):
     #Set default to ECS 154A, but it could also be 36A
     #This will need to be changed each time the quiz is changed
     if CLASS_ID == 516271:
-        pronounsQ = '1106640'
-        pronounsFree = '1106641'
-        genderMatchQ = '1106642'
-        syncQ = '1106643'
-        timeQ = '1106644'
-        commPreferenceQ = '1106645'
-        commValuesQ = '1106646'
-        leaderQ = '1106647'
-        countryQ = '1091825'
-        countryFree = '1091826'
-        internationalQ = '1106648'
-        languageQ = '1106649'
-        languageFree = '1106650'
-        groupWantsQ = '1106651'
-        groupWantsFree = '1106652'
-        priorityQ = '1106653'
-        studentPerfQ = '1106654'
+        activity1 = 'some other id'
+        activity2 = 'some other id'   
     """
 
-# the list of question ids of questions 
+    # the list of question ids of questions 
     questionList = [activity1, activity2]
+
     # all columns in the student data csv. Need for full question string
     fullQuestionList = studentData.columns.values.tolist()
     # print(fullQuestionList)
+
     # numerical location of the question
     questionsLoc = []
+
     # iterate through all column names in csv and add location of matching id to list
     i = 0
     for question in fullQuestionList:
@@ -55,15 +78,40 @@ def parse(studentData:pd, CLASS_ID: int):
     questionsDict['id'] = studentData.columns.get_loc('id')
     questionsDict['name'] = studentData.columns.get_loc('name')
 
-    print(questionsDict)
+    # print(questionsDict)
 
+    # parse each student submission
+    # map each submission to user ID?
+    # compile a master dictionary of submissions and return that?
+    # Key: submitting user's ID
+    # Value: list of Interactions
     for row in studentData.itertuples(index=False, name=None):
-        print(row[questionsDict['id']])
-        print(row[questionsDict['name']])
-        tempArr = row[questionsDict[activity1]].split(',')
-        print(tempArr)
-        tempArr = row[questionsDict[activity2]].split(',')
-        print(tempArr)
+        # get user name
+        name = row[questionsDict['name']]
+        print("Name:", name)
+
+        # get user id
+        user_id = row[questionsDict['id']]
+        print("User ID:", user_id)
+
+        # list of lists to hold all activities
+        all_interactions = []
+
+        # get user answers for each activity
+        i = 1
+        for activity in questionList:
+            try: 
+                tempArr = row[questionsDict[activity]].split(',')
+            except:
+                print("bad submission")
+                tempArr = row[questionsDict[activity]]
+            print("Interaction ", i, ": ", tempArr, sep='')
+            all_interactions.append(tempArr)
+            i += 1
+        
+        # creates list of Interaction objects for this specific submission
+        # can map it to the specific student for grading purposes?
+        createInteractions(all_interactions, name)
 
     """
     for row in studentData.itertuples(index=False, name=None):
