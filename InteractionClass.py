@@ -1,15 +1,17 @@
 from canvasapi import Canvas
 from StudentClass import Student
 
+# each interaction comes from a submission
 class Interaction:
     # an interaction HAS students involved
     # an interaction HAS a duration
     
     # initialize interaction without any arguments?
-    def __init__(self, activity, duration, participants):
+    def __init__(self, activity, duration, participants, user_id):
         self.activity = activity
         self.duration = duration
         self.participants = participants
+        self.user_id = user_id # the Student that this Interaction belongs to
     
     def addStudent(self, student):
         # maybe do input validation here, check whether student is duplicate, etc

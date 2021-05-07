@@ -7,6 +7,7 @@ from parseStudent import parse
 from StudentClass import Student
 from GroupClass import Group
 from InteractionClass import Interaction
+from SubmissionClass import Submission
 from func_utils import *
 
 # big ideas:
@@ -58,18 +59,79 @@ if __name__ == "__main__":
     # get user input for the course
     course = getCourse(canvas)
     print("Got course: '",course,"'",sep='')
-    
+
+    # get the user input for the quiz
+    quiz = getQuiz(course)
+    print("Got quiz: '",quiz,"'",sep='')
+
+    # Get the right quiz
+    studentReport = quiz.create_report("student_analysis")
+    reportProgress = None
+
+    # URL of canvas progress object from studentReport
+    reportProgressURL = studentReport.progress_url
+
+    # parse so only the process id remains
+    prefix = 'https://canvas.ucdavis.edu/api/v1/progress/'
+    if reportProgressURL.startswith(prefix):
+        reportProgressID = reportProgressURL[len(prefix):]
+    else: 
+        reportProgressID = reportProgressURL
+
+    # wait for student report to finish generating while the process has not completed or failed 
+    while reportProgress != 'completed' and reportProgress != 'failed':
+        reportProgressObj = canvas.get_progress(reportProgressID)
+        reportProgress = reportProgressObj.workflow_state
+
+    studentReportN = quiz.create_report("student_analysis")
+    url = studentReportN.file["url"]
+    studentData = pd.read_csv(url)
+
+    """ To help get question IDs:
+    for key in studentData.keys():
+        print("-------------------------")
+        print("Key:",key, sep='\n')
+        print("-----------")
+        print("Value:",studentData[key],sep='\n')
+    """
+
+    # have this return a dictionary 
+    # key: userID
+    # value: list of Interactions
+    # then when we build the group we can insert the Interactions for each student
+    sub_dict = parse(studentData, course.id)
+
+    print(sub_dict)
+
     # get the groups of a particular course
     groups = getGroups(course)
+
+    # for group in groups:
+    #     print("\n\nPrinting group '",group.name,"'",sep='')
+    #     print(group.__dict__)
+    #     print("------------------\nMembers:")
+        
+    #     users = group.get_users()
+        
+    #     print("------------------")
+    #     for user in users:
+    #         print("Printing users '",user.name,"'",sep='')
+    #         print(user.__dict__)
+    #         print("------------------")
 
     # convert each group to a Group object
     # then put them into a master group_list
     group_list = []
     for group in groups:
+        # initialize group with group name, group ID, and group Students
         g = Group(group)
+
+        # for each group, add the Interactions to each Student!
+        g.addInteractions(sub_dict)
+
         group_list.append(g)
 
-    # create a dictionary mapping each group_id to their students
+    # create a dictionary mapping each group_id to their list of Student objects
     # remember that each student has an attribute identifying their group as well
     group_dict = {}
     for g in group_list:
@@ -81,18 +143,6 @@ if __name__ == "__main__":
 
     # print(group_dict)
     # exit()
-    
-    # get the user input for the quiz
-    quiz = getQuiz(course)
-    print("Got quiz: '",quiz,"'",sep='')
-
-    # print all submissions for a particular quiz
-    submissions = quiz.get_submissions()
-    all_interactions = []
-    print("Got submissions: ")
-    for submission in submissions:
-        print(submission)
-        # all_interactions = recordSubmission(submission, all_interactions)
 
     # what the recordSubmission(submission, all_interactions) call should do:
         # look at all user submissions
@@ -145,38 +195,17 @@ if __name__ == "__main__":
     #getQuizSubmissions(quiz)
     #getSubmissions(quiz)
 
-    # Get the right quiz
-    studentReport = quiz.create_report("student_analysis")
-    reportProgress = None
+    
 
-    # URL of canvas progress object from studentReport
-    reportProgressURL = studentReport.progress_url
 
-    # parse so only the process id remains
-    prefix = 'https://canvas.ucdavis.edu/api/v1/progress/'
-    if reportProgressURL.startswith(prefix):
-        reportProgressID = reportProgressURL[len(prefix):]
-    else: 
-        reportProgressID = reportProgressURL
 
-    # wait for student report to finish generating while the process has not completed or failed 
-    while reportProgress != 'completed' and reportProgress != 'failed':
-        reportProgressObj = canvas.get_progress(reportProgressID)
-        reportProgress = reportProgressObj.workflow_state
 
-    studentReportN = quiz.create_report("student_analysis")
-    url = studentReportN.file["url"]
-    studentData = pd.read_csv(url)
 
-    """ To help get question IDs:
-    for key in studentData.keys():
-        print("-------------------------")
-        print("Key:",key, sep='\n')
-        print("-----------")
-        print("Value:",studentData[key],sep='\n')
-    """
 
-    parse(studentData, course.id)
+
+
+
+
     # Bonnie interacts with Scott
     # Scott interacts with Bonnie and Matthew
     # Matthew interacts with Bonnie and Scott
@@ -203,3 +232,33 @@ if __name__ == "__main__":
     # Separately: should there be Interaction IDs? Composed of user_id + quiz_id + question_id?
         # Used to make sure students don't match their own interactions? Or will that not be a problem?
         # Maybe it's only a problem if I compile a master list of Interactions and check for identical ones?
+
+# General outline to implement:
+    # We have a list of all submissions
+        # From the submission, we can get user ID
+    # We have a dictionary mapping each group_id to their list of Student objects
+        # Each Student object has name and ID
+
+    
+    # Form Groups of Students
+    # Each Student in the Group has a list of Interactions
+    # Each Interaction contains: activity, duration, Students involved
+
+    # Make a master list of Interactions within each group
+    # For each Interaction in the Group, check within that master list for a matching ones, per participant
+
+
+    # Make a dictionary that maps each student in the class to their ID and use that?
+        # Issue with repeat names
+
+    # Autogenerate Canvas quiz question dropdown with student names and IDs?
+        # Did Rebecca do this last quarter? Or you, for the Kudo points?
+
+    # Just ask:
+        # is the name selected in the group?
+        # How would I compare Interactions by hand?
+
+    # For each group
+        # For each member in that group
+            # For each interaction that they reported
+                #Verify that interaction against the report of the student's that they said they interacted with

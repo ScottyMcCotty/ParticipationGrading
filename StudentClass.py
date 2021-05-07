@@ -3,7 +3,7 @@ from canvasapi import Canvas
 class Student:
     # a student HAS a name
     # a student HAS some identification
-    # maybe a student has interactions?
+    # a student HAS Interactions
     
     # this is the initializer for classes
     # all class methods have the first argument as "self"
@@ -17,11 +17,17 @@ class Student:
         self.name = canvas_user_object.name
         self.ID = canvas_user_object.id
         self.SIS = canvas_user_object.sis_user_id
+        self.group_id = None
+        self.interactions = None
     
     # set the group that the student is in
     def setStudentGroup(self, group_id):
-        self.group = group_id
+        self.group_id = group_id
     
+    # set the student's Interactions
+    def setInteractions(self, stud_inters):
+        self.interactions = stud_inters
+
     # returns the student's name
     def getName(self):
         return self.name
@@ -33,3 +39,11 @@ class Student:
     # returns the student's sis user id
     def getSIS(self):
         return self.SIS
+
+    # returns the student's group ID
+    def getName(self):
+        return self.group_id
+    
+    # returns the student's list of Interaction objects
+    def getID(self):
+        return self.interactions

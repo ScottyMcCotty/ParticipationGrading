@@ -4,11 +4,12 @@ import math
 import pandas as pd
 # from StudentClass import Student
 from InteractionClass import Interaction
+import re
 
 # create a list of Interactions for each student
 # TO DO: need a way to get students by ID instead of name
 #        and add them as a Student object instead of just a string
-def createInteractions(inter_arr, user_name):
+def createInteractions(inter_arr, user_name, user_id):
     inter_list = []
     for interaction in inter_arr:
         # check for full bad submission, nan
@@ -21,19 +22,21 @@ def createInteractions(inter_arr, user_name):
         if activity == 'None':
             continue
 
-        # strip 'min' from the end of the string, convert to int
-        # '45+ min' will be a problem
-        duration = int(interaction[1][:-3])
+        # strip non-numeric characters from the string, convert to int
+        duration = int(re.sub('[^0-9]', '', interaction[1]))
 
         # set of people in interaction
         participants = set(interaction[2:])
         if 'None' in participants:
-            partipants.remove('None')
+            participants.remove('None')
         participants.add(user_name) # add the user who submitted to the interaction
 
-        new_inter = Interaction(activity, duration, participants)
+        # Interaction contains the activity (str), duration (int),
+        # participants (set of strs), and the user_id of the Student the Interaction belongs to
+        new_inter = Interaction(activity, duration, participants, user_id)
         inter_list.append(new_inter)
 
+    # list of Interactions for a single Student
     return inter_list
 
 
@@ -79,12 +82,13 @@ def parse(studentData:pd, CLASS_ID: int):
     questionsDict['name'] = studentData.columns.get_loc('name')
 
     # print(questionsDict)
+    # exit()
 
     # parse each student submission
-    # map each submission to user ID?
-    # compile a master dictionary of submissions and return that?
+    # compile a master dictionary of submissions and return that
     # Key: submitting user's ID
     # Value: list of Interactions
+    sub_dict = {}
     for row in studentData.itertuples(index=False, name=None):
         # get user name
         name = row[questionsDict['name']]
@@ -111,7 +115,13 @@ def parse(studentData:pd, CLASS_ID: int):
         
         # creates list of Interaction objects for this specific submission
         # can map it to the specific student for grading purposes?
-        createInteractions(all_interactions, name)
+        # list of Interactions for a single Student
+        inter_list = createInteractions(all_interactions, name, user_id)
+
+        # create dictionary entry
+        sub_dict[user_id] = inter_list
+
+    return sub_dict
 
     """
     for row in studentData.itertuples(index=False, name=None):

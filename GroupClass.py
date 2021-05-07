@@ -2,10 +2,10 @@ from canvasapi import Canvas
 from StudentClass import Student
 
 class Group:
+    # a group HAS a name
+    # a group HAS and ID
     # a group HAS students
     # a group HAS interactions between students
-    # a group HAS a name
-    # a group HAS identification
     
     # initialize Group by passing in canvas group object
     def __init__(self, canvas_group_object):
@@ -26,6 +26,21 @@ class Group:
             # print("Got student '", student.getName(), "' from group '", self.getName(), "'", sep='')
         return students
     
+    # add Interactions to each student in the Group
+    def addInteractions(self, sub_dict):
+        for student in self.students:
+            # get the list of Interactions for that particular Student
+            try: 
+                stud_inters = sub_dict[student.ID]
+                # print(student.getID()) # why is this None?
+                # print(student.ID)
+
+                # set that Student attribute
+                student.setInteractions(stud_inters)
+                print("Student", student.ID, "DOES have interactions on file")
+            except:
+                print("Student", student.ID, "doesn't have interactions on file")
+
     # check that name, ID, and SIS match; student is in group
     # used to make sure the interactions are with people in the specific group
     # student should be a Student object
